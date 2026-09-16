@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Divisão de Despesas - ERP Residencial</title>
+    <style>
+        :root {
+            --primary: #4f46e5; --primary-hover: #4338ca;
+            --bg-color: #f3f4f6; --card-bg: #ffffff;
+            --text-main: #1f2937; --text-muted: #6b7280;
+            --border-color: #e5e7eb;
+            --success: #10b981; --danger: #ef4444; --warning: #f59e0b;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        body { background-color: var(--bg-color); color: var(--text-main); padding-bottom: 80px; -webkit-tap-highlight-color: transparent; }
+        
+        nav { background: white; padding: 16px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 16px; position: sticky; top: 0; z-index: 10; }
+        .nav-brand { font-weight: bold; color: var(--primary); font-size: 18px; }
+        .user-selector { display: flex; align-items: center; gap: 8px; }
+        .user-selector select { padding: 6px 12px; border-radius: 20px; border: 1px solid var(--primary); color: var(--primary); font-weight: bold; background: #e0e7ff; outline: none; }
+        
+        .container { margin: 0 auto; max-width: 500px; padding: 0 16px; }
+        .card { background-color: var(--card-bg); border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        h2 { font-size: 16px; margin-bottom: 16px; padding-bottom: 8px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+        
+        .form-group { margin-bottom: 16px; }
+        label { display: block; font-size: 14px; font-weight: 500; margin-bottom: 6px; }
+        input, select { width: 100%; padding: 12px; border: 1px solid var(--border-color); border-radius: 8px; font-size: 16px; background-color: #fff; }
+        textarea { width: 100%; padding: 12px; border: 1px solid var(--border-color); border-radius: 8px; font-size: 16px; background-color: #fff; resize: vertical; min-height: 80px;}
+        
+        button.btn-primary { width: 100%; padding: 14px; background-color: var(--primary); color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; }
+        button.btn-success { background-color: var(--success); color: white; border: none; border-radius: 8px; padding: 10px 16px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 8px; }
+        button.btn-danger { background-color: var(--danger); color: white; border: none; border-radius: 8px; padding: 6px 12px; font-size: 12px; font-weight: bold; cursor: pointer; }
+        
+        .flex-row { display: flex; gap: 8px; align-items: center; }
+        .flex-row input { flex: 1; }
+        .btn-add { background: var(--primary); color: white; border: none; border-radius: 8px; width: 48px; height: 48px; font-size: 20px; font-weight: bold; cursor: pointer; }
+        .tag-list { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+        .tag { background: #e0e7ff; color: #3730a3; padding: 6px 12px; border-radius: 16px; font-size: 13px; font-weight: 500; display: flex; align-items: center; gap: 8px; }
+        
+        .split-grid { display: grid; gap: 12px; margin-top: 12px; padding: 12px; background: #f9fafb; border-radius: 8px; border: 1px solid var(--border-color); }
+        .split-item { display: flex; justify-content: space-between; align-items: center; font-size: 14px; }
+        .split-item input.pct-input { width: 70px; text-align: right; padding: 6px; border: 1px solid #ccc; border-radius: 4px;}
+
+        .history-list { list-style: none; }
+        .history-item { padding: 16px 0; border-bottom: 1px solid var(--border-color); }
+        .history-item:last-child { border-bottom: none; }
+        .hist-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
+        .hist-title { font-weight: bold; font-size: 15px; }
+        .hist-date { font-size: 12px; color: var(--text-muted); }
+        .hist-amount { font-weight: bold; font-size: 16px; }
+        .hist-details { background: #f9fafb; padding: 10px; border-radius: 6px; font-size: 13px; color: #4b5563; }
+        
+        /* Badges e Status */
+        .badge { display: inline-block; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: bold; margin-left: 6px; vertical-align: middle; }
+        .badge-edited { background: #fef3c7; color: #92400e; border: 1px solid #fcd34d; }
+        .badge-paid { background: #d1fae5; color: #065f46; border: 1px solid #6ee7b7; }
+        
+        /* Saldo do Perfil */
+        .profile-balance { text-align: center; padding: 24px 0; }
+        .balance-amount { font-size: 36px; font-weight: bold; margin-bottom: 8px; }
+        .text-positive { color: var(--success); }
+        .text-negative { color: var(--danger); }
+        .text-neutral { color: var(--text-muted); }
+        
+        /* Tabs */
+        .tabs { display: flex; margin-bottom: 16px; background: white; border-radius: 8px; padding: 4px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+        .tab { flex: 1; text-align: center; padding: 10px; font-size: 14px; font-weight: 600; color: var(--text-muted); cursor: pointer; border-radius: 6px; }
+        .tab.active { background: var(--primary); color: white; }
+
+        .view-section { display: none; }
+        .view-section.active { display: block; }
+        
+        /* Modais */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 50; align-items: center; justify-content: center; padding: 16px; }
+        .modal-content { background: white; width: 100%; max-width: 400px; padding: 24px; border-radius: 12px; max-height: 90vh; overflow-y: auto; }
+        
+        .audit-log { margin-top: 12px; font-size: 12px; color: var(--text-muted); border-top: 1px dashed var(--border-color); padding-top: 8px; }
+        .btn-edit { background: transparent; border: none; color: var(--primary); font-size: 13px; font-weight: bold; cursor: pointer; text-decoration: underline; margin-top: 8px; }
+        .btn-pay-specific { background: var(--success); color: white; border: none; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; cursor: pointer; margin-left: 8px;}
+    </style>
+</head>
+<body>
+
+    <nav>
+        <div class="nav-brand">Apartamento</div>
+        <div class="user-selector">
+            <span style="font-size: 12px; color: var(--text-muted);">Perfil:</span>
+            <select id="currentUserSelect" onchange="changeCurrentUser()"></select>
+        </div>
+    </nav>
+
+    <div class="container">
+        
+        <!-- Abas -->
+        <div class="tabs">
+            <!-- Visão Geral agora é a primeira aba (default) -->
+            <div class="tab active" onclick="switchTab('general')" id="tab-general">Visão Geral</div>
+            <div class="tab" onclick="switchTab('profile')" id="tab-profile">Meu Perfil</div>
+        </div>
+
+        <!-- ==============================
+             VISÃO GERAL (NOVO DEFAULT)
+             ============================== -->
+        <div id="view-general" class="view-section active">
+            
+            <div class="card">
+                <h2>Participantes</h2>
+                <div class="flex-row">
+                    <input type="text" id="newPersonInput" placeholder="Nome do amigo">
+                    <button class="btn-add" onclick="addPerson()">+</button>
+                </div>
+                <div class="tag-list" id="peopleList"></div>
+            </div>
+
+            <div class="card">
+                <h2>Lançar Nova Despesa</h2>
+                <form id="expenseForm">
+                    <div class="form-group">
+                        <label>Quem pagou?</label>
+                        <select id="payerInput"></select>
+                    </div>
+                    <div class="form-group">
+                        <label>O que foi?</label>
+                        <input type="text" id="titleInput" placeholder="Ex: Mercado" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Descrição detalhada / Observações</label>
+                        <textarea id="descInput" placeholder="Itens comprados, motivo..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Valor Total (R$)</label>
+                        <input type="text" inputmode="decimal" id="amountInput" placeholder="0,00" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Como dividir?</label>
+                        <select id="splitModeInput" onchange="renderSplitUI()">
+                            <option value="equal">Igual entre todos</option>
+                            <option value="custom">Porcentagem Customizada</option>
+                        </select>
+                    </div>
+                    <div class="split-grid" id="splitUI"></div>
+                    <p id="splitError" style="color: var(--danger); font-size: 12px; margin-top: 8px; display: none;">A soma das porcentagens deve ser 100%.</p>
+
+                    <button type="submit" class="btn-primary" style="margin-top: 16px;">Registrar Despesa</button>
+                </form>
+            </div>
+
+            <div class="card">
+                <h2>Diário Geral <button onclick="clearData()" style="background:transparent; border:none; color:var(--danger); font-size:12px; cursor:pointer;">Limpar Tudo</button></h2>
+                <ul class="history-list" id="globalHistoryList"></ul>
+            </div>
+        </div>
+
+        <!-- ==============================
+             MEU PERFIL
+             ============================== -->
+        <div id="view-profile" class="view-section">
+            
+            <div class="card">
+                <div class="profile-balance">
+                    <h3 id="profileGreeting">Olá</h3>
+                    <div id="profileBalanceDisplay" class="balance-amount text-neutral">R$ 0,00</div>
+                    <p id="profileStatusText" style="font-size: 14px; margin-bottom: 16px;">Saldo pendente em aberto.</p>
+                    
+                    <button id="btnPayDebt" class="btn-success" style="display: none;" onclick="openPaymentModal(null)">
+                        Fazer um Pagamento (Abater Saldo)
+                    </button>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>Pendências Específicas</h2>
+                <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 12px;">Contas que você deve e que ainda não foram pagas.</p>
+                <ul class="history-list" id="pendingSpecificList"></ul>
+            </div>
+
+            <div class="card">
+                <h2>Seu Extrato Completo</h2>
+                <ul class="history-list" id="personalHistoryList"></ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Pagamento -->
+    <div id="paymentModal" class="modal-overlay">
+        <div class="modal-content">
+            <h2 style="border:none; color:var(--text-main); font-size:18px; margin-bottom:16px;" id="payModalTitle">Registrar Pagamento</h2>
+            
+            <!-- Hidden input para armazenar se estamos pagando uma despesa especifica -->
+            <input type="hidden" id="paySpecificTargetId" value="">
+
+            <div class="form-group">
+                <label>Para quem você pagou?</label>
+                <select id="paymentReceiver"></select>
+            </div>
+            <div class="form-group">
+                <label>Descrição (Opcional)</label>
+                <input type="text" id="paymentDesc" placeholder="Ex: Pix referente a energia">
+            </div>
+            <div class="form-group">
+                <label>Qual valor? (R$)</label>
+                <input type="text" inputmode="decimal" id="paymentAmount" placeholder="0,00">
+            </div>
+            <div class="flex-row" style="margin-top: 24px; gap: 12px;">
+                <button onclick="closeModal('paymentModal')" style="flex:1; padding: 12px; background: #e5e7eb; border: none; border-radius: 8px; font-weight: bold;">Cancelar</button>
+                <button onclick="submitPayment()" style="flex:1; padding: 12px; background: var(--success); color: white; border: none; border-radius: 8px; font-weight: bold;">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Edição -->
+    <div id="editModal" class="modal-overlay">
+        <div class="modal-content">
+            <h2 style="border:none; color:var(--text-main); font-size:18px; margin-bottom:16px;">Editar Despesa</h2>
+            
+            <input type="hidden" id="editTxId">
+            
+            <div class="form-group">
+                <label>O que foi?</label>
+                <input type="text" id="editTitleInput" required>
+            </div>
+            <div class="form-group">
+                <label>Valor Total (R$)</label>
+                <input type="text" inputmode="decimal" id="editAmountInput" required>
+            </div>
+            <div class="form-group">
+                <label>Motivo da Edição</label>
+                <input type="text" id="editReasonInput" placeholder="Ex: Digitei o valor errado na nota" required>
+            </div>
+
+            <div class="flex-row" style="margin-top: 24px; gap: 12px;">
+                <button onclick="closeModal('editModal')" style="flex:1; padding: 12px; background: #e5e7eb; border: none; border-radius: 8px; font-weight: bold;">Cancelar</button>
+                <button onclick="submitEdit()" style="flex:1; padding: 12px; background: var(--primary); color: white; border: none; border-radius: 8px; font-weight: bold;">Salvar Alteração</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let initUsers = JSON.parse(localStorage.getItem('erpUsers')) || ['Victor', 'Amigo'];
+        
+        let state = {
+            users: initUsers,
+            // transações: expense ou payment.
+            // expense ganhou: title, description, isSettled, auditLog[]
+            // payment ganhou: description, targetExpenseId
+            transactions: JSON.parse(localStorage.getItem('erpTransactions')) || [],
+            currentUser: localStorage.getItem('erpCurrentUser') || initUsers[0]
+        };
+
+        if (!state.users.includes(state.currentUser)) { state.currentUser = state.users[0]; }
+
+        /* Utilitários */
+        const parseBRL = (val) => val ? parseFloat(val.toString().replace(/\./g, '').replace(',', '.')) : 0;
+        const formatBRL = (val) => val.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 2 });
+        const saveState = () => {
+            localStorage.setItem('erpUsers', JSON.stringify(state.users));
+            localStorage.setItem('erpTransactions', JSON.stringify(state.transactions));
+            localStorage.setItem('erpCurrentUser', state.currentUser);
+        };
+        const closeModal = (id) => document.getElementById(id).style.display = 'none';
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.view-section').forEach(v => v.classList.remove('active'));
+            document.getElementById(`tab-${tabId}`).classList.add('active');
+            document.getElementById(`view-${tabId}`).classList.add('active');
+        }
+
+        /* Gestão de Usuários */
+        function addPerson() {
+            const name = document.getElementById('newPersonInput').value.trim();
+            if (name && !state.users.includes(name)) { state.users.push(name); saveState(); updateApp(); document.getElementById('newPersonInput').value=''; }
+        }
+        function removePerson(name) {
+            if (state.transactions.some(t => t.payer === name || t.receiver === name || (t.splits && t.splits[name] !== undefined))) {
+                return alert('Remoção bloqueada: usuário possui histórico.');
+            }
+            state.users = state.users.filter(u => u !== name);
+            if(state.currentUser === name) state.currentUser = state.users[0];
+            saveState(); updateApp();
+        }
+        function changeCurrentUser() {
+            state.currentUser = document.getElementById('currentUserSelect').value;
+            saveState(); updateApp();
+        }
+
+        /* Motor Financeiro (Agora considerando o status isSettled das cotas) */
+        function getPendingBalance(userName) {
+            let balance = 0;
+            state.transactions.forEach(t => {
+                if (t.type === 'expense') {
+                    // Eu paguei a conta. Ganho crédito pelas cotas dos outros, DESDE QUE ELES NÃO TENHAM ME PAGO ESPECIFICAMENTE AQUELA COTA.
+                    if (t.payer === userName) {
+                        for(let u in t.splits) {
+                            if (u !== userName && !t.isSettled?.[u]) {
+                                balance += t.splits[u];
+                            }
+                        }
+                    } 
+                    // Outra pessoa pagou, eu devo a minha cota (se ainda não paguei)
+                    else if (t.splits[userName] && !t.isSettled?.[userName]) {
+                        balance -= t.splits[userName];
+                    }
+                } 
+                else if (t.type === 'payment' && !t.targetExpenseId) {
+                    // Pagamentos gerais abatem do bolo geral pendente
+                    if (t.payer === userName) balance += t.totalAmount;
+                    if (t.receiver === userName) balance -= t.totalAmount;
+                }
+            });
+            return balance;
+        }
+
+        /* Renderização */
+        function renderNav() {
+            const select = document.getElementById('currentUserSelect');
+            select.innerHTML = state.users.map(u => `<option value="${u}">${u}</option>`).join('');
+            select.value = state.currentUser;
+        }
+
+        function renderPeopleList() {
+            const list = document.getElementById('peopleList');
+            list.innerHTML = state.users.map(u => `<div class="tag">${u} <button onclick="removePerson('${u}')">×</button></div>`).join('');
+            const payerSelect = document.getElementById('payerInput');
+            payerSelect.innerHTML = state.users.map(u => `<option value="${u}">${u}</option>`).join('');
+            payerSelect.value = state.currentUser;
+        }
+
+        function renderSplitUI() {
+            const splitMode = document.getElementById('splitModeInput').value;
+            const splitUI = document.getElementById('splitUI');
+            if (state.users.length === 0) return (splitUI.innerHTML = '');
+            if (splitMode === 'equal') {
+                splitUI.innerHTML = state.users.map(u => `<div class="split-item"><label><input type="checkbox" class="split-check" value="${u}" checked> ${u}</label></div>`).join('');
+            } else {
+                splitUI.innerHTML = state.users.map(u => `<div class="split-item"><span>${u}</span><div style="display:flex; align-items:center; gap:4px;"><input type="text" inputmode="decimal" class="pct-input" data-user="${u}" value="${(100/state.users.length).toFixed(1)}"> %</div></div>`).join('');
+            }
+        }
+
+        function renderGlobalHistory() {
+            const list = document.getElementById('globalHistoryList');
+            if (state.transactions.length === 0) return (list.innerHTML = '<li style="padding:12px;text-align:center;color:#9ca3af;font-size:14px;">Vazio</li>');
+            
+            let html = '';
+            [...state.transactions].reverse().forEach(tx => {
+                if (tx.type === 'expense') {
+                    let splitsHTML = Object.entries(tx.splits).map(([u, val]) => {
+                        let status = tx.isSettled?.[u] ? ' <span class="badge badge-paid">PAGO</span>' : '';
+                        return `<li>${u}: ${formatBRL(val)} (${((val/tx.totalAmount)*100).toFixed(0)}%)${status}</li>`;
+                    }).join('');
+
+                    let auditHTML = '';
+                    if (tx.auditLog && tx.auditLog.length > 0) {
+                        auditHTML = `<div class="audit-log"><b>Histórico de Edições:</b><br>` + 
+                                    tx.auditLog.map(log => `• ${log.date} (${log.editor}): De ${formatBRL(log.oldAmount)} para ${formatBRL(log.newAmount)}. Motivo: ${log.reason}`).join('<br>') + `</div>`;
+                    }
+
+                    // Apenas o dono da conta pode editá-la
+                    let editBtn = tx.payer === state.currentUser ? `<button class="btn-edit" onclick="openEditModal(${tx.id})">Editar Compra</button>` : '';
+                    let badgeEdited = tx.auditLog?.length > 0 ? `<span class="badge badge-edited">Editado</span>` : '';
+
+                    html += `
+                    <li class="history-item">
+                        <div class="hist-header">
+                            <div><div class="hist-title">🛒 ${tx.title} ${badgeEdited}</div><div class="hist-date">${tx.date} • Pago por ${tx.payer}</div></div>
+                            <div class="hist-amount text-negative">${formatBRL(tx.totalAmount)}</div>
+                        </div>
+                        <div class="hist-details">
+                            ${tx.description ? `<p style="margin-bottom:8px;"><i>"${tx.description}"</i></p>` : ''}
+                            Divisão: <ul>${splitsHTML}</ul>
+                            ${auditHTML}
+                            ${editBtn}
+                        </div>
+                    </li>`;
+                } else {
+                    let desc = tx.description ? `<br><i>"${tx.description}"</i>` : '';
+                    html += `
+                    <li class="history-item" style="background:#f0fdf4; padding: 12px; border-radius: 8px;">
+                        <div class="hist-header" style="margin:0;">
+                            <div><div class="hist-title">💸 Pagamento</div><div class="hist-date">${tx.date} • ${tx.payer} pagou para ${tx.receiver}${desc}</div></div>
+                            <div class="hist-amount text-positive">${formatBRL(tx.totalAmount)}</div>
+                        </div>
+                    </li>`;
+                }
+            });
+            list.innerHTML = html;
+        }
+
+        function renderProfileView() {
+            const user = state.currentUser;
+            document.getElementById('profileGreeting').textContent = `Perfil: ${user}`;
+            
+            const bal = getPendingBalance(user);
+            const display = document.getElementById('profileBalanceDisplay');
+            const statusTxt = document.getElementById('profileStatusText');
+            const btnPay = document.getElementById('btnPayDebt');
+            
+            if (bal > 0.01) {
+                display.textContent = formatBRL(bal); display.className = 'balance-amount text-positive';
+                statusTxt.textContent = "A galera te deve."; btnPay.style.display = 'none';
+            } else if (bal < -0.01) {
+                display.textContent = formatBRL(Math.abs(bal)); display.className = 'balance-amount text-negative';
+                statusTxt.textContent = "Seu saldo pendente devedor."; btnPay.style.display = 'block';
+            } else {
+                display.textContent = formatBRL(0); display.className = 'balance-amount text-neutral';
+                statusTxt.textContent = "Tudo quitado."; btnPay.style.display = 'none';
+            }
+
+            // Extrato e Pendências
+            const pendingList = document.getElementById('pendingSpecificList');
+            const historyList = document.getElementById('personalHistoryList');
+            let pendingHTML = '';
+            let histHTML = '';
+
+            [...state.transactions].reverse().forEach(tx => {
+                // Pendências específicas
+                if (tx.type === 'expense' && tx.payer !== user && tx.splits[user] && !tx.isSettled?.[user]) {
+                    pendingHTML += `
+                    <li class="history-item">
+                        <div class="hist-header" style="margin:0;">
+                            <div><div class="hist-title">${tx.title}</div><div class="hist-date">Você deve a ${tx.payer}</div></div>
+                            <div style="text-align: right;">
+                                <div class="hist-amount text-negative" style="margin-bottom:4px;">${formatBRL(tx.splits[user])}</div>
+                                <button class="btn-pay-specific" onclick="openPaymentModal(${tx.id})">Pagar Esta</button>
+                            </div>
+                        </div>
+                    </li>`;
+                }
+
+                // Extrato Pessoal
+                let impact = 0; let desc = '';
+                if (tx.type === 'expense') {
+                    if (tx.payer === user) { impact = tx.totalAmount - (tx.splits[user]||0); desc = `Você pagou ${tx.title}. A galera te deve.`; }
+                    else if (tx.splits[user]) { impact = -tx.splits[user]; desc = `Cota de ${tx.title} paga por ${tx.payer}.`; }
+                } else if (tx.type === 'payment') {
+                    if (tx.payer === user) { impact = tx.totalAmount; desc = `Você pagou ${tx.receiver}. ${tx.description||''}`; }
+                    else if (tx.receiver === user) { impact = -tx.totalAmount; desc = `${tx.payer} te pagou. ${tx.description||''}`; }
+                }
+
+                if (impact !== 0) {
+                    let color = impact > 0 ? 'text-positive' : 'text-negative';
+                    let sign = impact > 0 ? '+' : '';
+                    histHTML += `
+                    <li class="history-item">
+                        <div class="hist-header" style="margin:0;">
+                            <div><div class="hist-title" style="font-size:14px;">${tx.type === 'expense' ? tx.title : 'Pagamento'}</div><div class="hist-date">${tx.date}</div></div>
+                            <div class="hist-amount ${color}">${sign}${formatBRL(impact)}</div>
+                        </div>
+                        <div class="hist-date" style="margin-top:4px;">${desc}</div>
+                    </li>`;
+                }
+            });
+
+            pendingList.innerHTML = pendingHTML || '<li style="font-size:12px; color:var(--text-muted); padding: 8px;">Nenhuma conta específica pendente.</li>';
+            historyList.innerHTML = histHTML || '<li style="font-size:12px; color:var(--text-muted); padding: 8px;">Nenhum registro.</li>';
+        }
+
+        /* Ações Principais */
+        document.getElementById('expenseForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const payer = document.getElementById('payerInput').value;
+            const title = document.getElementById('titleInput').value;
+            const desc = document.getElementById('descInput').value;
+            const amount = parseBRL(document.getElementById('amountInput').value);
+            const mode = document.getElementById('splitModeInput').value;
+
+            if (!payer || isNaN(amount) || amount <= 0) return;
+
+            let splits = {};
+            if (mode === 'equal') {
+                const checks = document.querySelectorAll('.split-check:checked');
+                if (checks.length === 0) return alert('Selecione alguém para dividir.');
+                checks.forEach(chk => splits[chk.value] = amount / checks.length);
+            } else {
+                let totalPct = 0;
+                document.querySelectorAll('.pct-input').forEach(inp => {
+                    let pct = parseBRL(inp.value) || 0; totalPct += pct; splits[inp.dataset.user] = (amount * pct) / 100;
+                });
+                if (Math.abs(totalPct - 100) > 0.1) return (document.getElementById('splitError').style.display = 'block');
+                document.getElementById('splitError').style.display = 'none';
+            }
+
+            state.transactions.push({ id: Date.now(), type: 'expense', date: new Date().toLocaleDateString('pt-BR'), totalAmount: amount, payer, title, description: desc, splits, isSettled: {}, auditLog: [] });
+            saveState(); document.getElementById('expenseForm').reset(); document.getElementById('amountInput').value=''; renderSplitUI(); updateApp();
+        });
+
+        /* Modais de Pagamento e Edição */
+        function openPaymentModal(targetExpenseId) {
+            document.getElementById('paymentDesc').value = '';
+            const receiverSelect = document.getElementById('paymentReceiver');
+            const amountInput = document.getElementById('paymentAmount');
+            document.getElementById('paySpecificTargetId').value = targetExpenseId || '';
+
+            if (targetExpenseId) {
+                // Pagando uma conta específica
+                const expense = state.transactions.find(t => t.id === targetExpenseId);
+                document.getElementById('payModalTitle').textContent = `Pagar conta: ${expense.title}`;
+                receiverSelect.innerHTML = `<option value="${expense.payer}">${expense.payer}</option>`;
+                amountInput.value = expense.splits[state.currentUser].toFixed(2).replace('.', ',');
+                document.getElementById('paymentDesc').value = `Referente a: ${expense.title}`;
+            } else {
+                // Pagamento genérico de saldo
+                document.getElementById('payModalTitle').textContent = `Fazer um Pagamento`;
+                receiverSelect.innerHTML = state.users.filter(u => u !== state.currentUser).map(r => `<option value="${r}">${r}</option>`).join('');
+                amountInput.value = Math.abs(getPendingBalance(state.currentUser)).toFixed(2).replace('.', ',');
+            }
+            document.getElementById('paymentModal').style.display = 'flex';
+        }
+
+        function submitPayment() {
+            const receiver = document.getElementById('paymentReceiver').value;
+            const amount = parseBRL(document.getElementById('paymentAmount').value);
+            const desc = document.getElementById('paymentDesc').value;
+            const targetId = document.getElementById('paySpecificTargetId').value;
+
+            if (!receiver || isNaN(amount) || amount <= 0) return;
+
+            if (targetId) {
+                // Marca a cota da despesa como paga
+                const expense = state.transactions.find(t => t.id == targetId);
+                if(expense) {
+                    if(!expense.isSettled) expense.isSettled = {};
+                    expense.isSettled[state.currentUser] = true;
+                }
+            }
+
+            state.transactions.push({ id: Date.now(), type: 'payment', date: new Date().toLocaleDateString('pt-BR'), totalAmount: amount, payer: state.currentUser, receiver, description: desc, targetExpenseId: targetId });
+            saveState(); closeModal('paymentModal'); updateApp();
+        }
+
+        function openEditModal(txId) {
+            const tx = state.transactions.find(t => t.id === txId);
+            document.getElementById('editTxId').value = tx.id;
+            document.getElementById('editTitleInput').value = tx.title;
+            document.getElementById('editAmountInput').value = tx.totalAmount.toFixed(2).replace('.', ',');
+            document.getElementById('editReasonInput').value = '';
+            document.getElementById('editModal').style.display = 'flex';
+        }
+
+        function submitEdit() {
+            const txId = parseInt(document.getElementById('editTxId').value);
+            const tx = state.transactions.find(t => t.id === txId);
+            const newTitle = document.getElementById('editTitleInput').value;
+            const newAmount = parseBRL(document.getElementById('editAmountInput').value);
+            const reason = document.getElementById('editReasonInput').value;
+
+            if (!reason || isNaN(newAmount) || newAmount <= 0) return alert('Preencha um motivo e um valor válido.');
+
+            // Regrava log
+            if(!tx.auditLog) tx.auditLog = [];
+            tx.auditLog.push({ date: new Date().toLocaleDateString('pt-BR'), editor: state.currentUser, oldAmount: tx.totalAmount, newAmount: newAmount, reason: reason });
+
+            // Recalcula splits mantendo a proporção original
+            for (let user in tx.splits) {
+                let pct = tx.splits[user] / tx.totalAmount;
+                tx.splits[user] = newAmount * pct;
+            }
+            tx.totalAmount = newAmount;
+            tx.title = newTitle;
+
+            saveState(); closeModal('editModal'); updateApp();
+        }
+
+        window.clearData = () => {
+            if (confirm('Apagar todo o diário?')) { state.transactions = []; saveState(); updateApp(); }
+        };
+
+        function updateApp() { renderNav(); renderPeopleList(); renderSplitUI(); renderGlobalHistory(); renderProfileView(); }
+        updateApp();
+    </script>
+</body>
+</html>
