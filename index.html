@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Divisão de Despesas - ERP Sincronizado</title>
     <style>
-        /* MANTENHA EXATAMENTE O MESMO CSS DO CÓDIGO ANTERIOR */
         :root {
             --primary: #4f46e5; --primary-hover: #4338ca;
             --bg-color: #f3f4f6; --card-bg: #ffffff;
@@ -13,30 +12,37 @@
             --border-color: #e5e7eb;
             --success: #10b981; --danger: #ef4444; --warning: #f59e0b;
         }
-
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
         body { background-color: var(--bg-color); color: var(--text-main); padding-bottom: 80px; -webkit-tap-highlight-color: transparent; }
+        
         nav { background: white; padding: 16px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 16px; position: sticky; top: 0; z-index: 10; }
         .nav-brand { font-weight: bold; color: var(--primary); font-size: 18px; }
         .user-selector { display: flex; align-items: center; gap: 8px; }
         .user-selector select { padding: 6px 12px; border-radius: 20px; border: 1px solid var(--primary); color: var(--primary); font-weight: bold; background: #e0e7ff; outline: none; }
+        
         .container { margin: 0 auto; max-width: 500px; padding: 0 16px; }
         .card { background-color: var(--card-bg); border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         h2 { font-size: 16px; margin-bottom: 16px; padding-bottom: 8px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+        
         .form-group { margin-bottom: 16px; }
         label { display: block; font-size: 14px; font-weight: 500; margin-bottom: 6px; }
         input, select { width: 100%; padding: 12px; border: 1px solid var(--border-color); border-radius: 8px; font-size: 16px; background-color: #fff; }
         textarea { width: 100%; padding: 12px; border: 1px solid var(--border-color); border-radius: 8px; font-size: 16px; background-color: #fff; resize: vertical; min-height: 80px;}
+        
         button.btn-primary { width: 100%; padding: 14px; background-color: var(--primary); color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; }
         button.btn-success { background-color: var(--success); color: white; border: none; border-radius: 8px; padding: 10px 16px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 8px; }
+        
         .flex-row { display: flex; gap: 8px; align-items: center; }
         .flex-row input { flex: 1; }
         .btn-add { background: var(--primary); color: white; border: none; border-radius: 8px; width: 48px; height: 48px; font-size: 20px; font-weight: bold; cursor: pointer; }
         .tag-list { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
         .tag { background: #e0e7ff; color: #3730a3; padding: 6px 12px; border-radius: 16px; font-size: 13px; font-weight: 500; display: flex; align-items: center; gap: 8px; }
+        .tag button { background: transparent; border: none; color: #3730a3; cursor: pointer; font-weight: bold; }
+        
         .split-grid { display: grid; gap: 12px; margin-top: 12px; padding: 12px; background: #f9fafb; border-radius: 8px; border: 1px solid var(--border-color); }
         .split-item { display: flex; justify-content: space-between; align-items: center; font-size: 14px; }
         .split-item input.pct-input { width: 70px; text-align: right; padding: 6px; border: 1px solid #ccc; border-radius: 4px;}
+
         .history-list { list-style: none; }
         .history-item { padding: 16px 0; border-bottom: 1px solid var(--border-color); }
         .history-item:last-child { border-bottom: none; }
@@ -45,26 +51,31 @@
         .hist-date { font-size: 12px; color: var(--text-muted); }
         .hist-amount { font-weight: bold; font-size: 16px; }
         .hist-details { background: #f9fafb; padding: 10px; border-radius: 6px; font-size: 13px; color: #4b5563; }
+        
         .badge { display: inline-block; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: bold; margin-left: 6px; vertical-align: middle; }
         .badge-edited { background: #fef3c7; color: #92400e; border: 1px solid #fcd34d; }
         .badge-paid { background: #d1fae5; color: #065f46; border: 1px solid #6ee7b7; }
+        
         .profile-balance { text-align: center; padding: 24px 0; }
         .balance-amount { font-size: 36px; font-weight: bold; margin-bottom: 8px; }
         .text-positive { color: var(--success); }
         .text-negative { color: var(--danger); }
         .text-neutral { color: var(--text-muted); }
+        
         .tabs { display: flex; margin-bottom: 16px; background: white; border-radius: 8px; padding: 4px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
         .tab { flex: 1; text-align: center; padding: 10px; font-size: 14px; font-weight: 600; color: var(--text-muted); cursor: pointer; border-radius: 6px; }
         .tab.active { background: var(--primary); color: white; }
+
         .view-section { display: none; }
         .view-section.active { display: block; }
+        
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 50; align-items: center; justify-content: center; padding: 16px; }
         .modal-content { background: white; width: 100%; max-width: 400px; padding: 24px; border-radius: 12px; max-height: 90vh; overflow-y: auto; }
+        
         .audit-log { margin-top: 12px; font-size: 12px; color: var(--text-muted); border-top: 1px dashed var(--border-color); padding-top: 8px; }
         .btn-edit { background: transparent; border: none; color: var(--primary); font-size: 13px; font-weight: bold; cursor: pointer; text-decoration: underline; margin-top: 8px; }
         .btn-pay-specific { background: var(--success); color: white; border: none; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; cursor: pointer; margin-left: 8px;}
-        
-        /* Indicador de Sincronização */
+
         #syncStatus {
             position: fixed; bottom: 16px; right: 16px; padding: 8px 12px; border-radius: 20px;
             font-size: 12px; font-weight: bold; background: #fbbf24; color: #92400e;
@@ -75,11 +86,6 @@
 </head>
 <body>
 
-    <!-- MANTENHA A MESMA ESTRUTURA HTML DO BODY AQUI -->
-    <!-- ... (Nav, Abas, Visão Geral, Meu Perfil, Modais, etc - copie igual ao anterior) ... -->
-    
-    <!-- (Apenas omitido aqui para focar no novo JavaScript, mas você deve manter as tags HTML intactas) -->
-    
     <nav>
         <div class="nav-brand">Apartamento</div>
         <div class="user-selector">
@@ -87,15 +93,16 @@
             <select id="currentUserSelect" onchange="changeCurrentUser()"></select>
         </div>
     </nav>
+
     <div class="container">
         <div class="tabs">
             <div class="tab active" onclick="switchTab('general')" id="tab-general">Visão Geral</div>
             <div class="tab" onclick="switchTab('profile')" id="tab-profile">Meu Perfil</div>
         </div>
-        <!-- ... [TODO O RESTO DO SEU HTML DE CARDS E FORMS] ... -->
-        
+
         <!-- VISÃO GERAL -->
         <div id="view-general" class="view-section active">
+            
             <div class="card">
                 <h2>Participantes</h2>
                 <div class="flex-row">
@@ -104,133 +111,183 @@
                 </div>
                 <div class="tag-list" id="peopleList"></div>
             </div>
+
             <div class="card">
                 <h2>Lançar Nova Despesa</h2>
                 <form id="expenseForm">
-                    <div class="form-group"><label>Quem pagou?</label><select id="payerInput"></select></div>
-                    <div class="form-group"><label>O que foi?</label><input type="text" id="titleInput" required></div>
-                    <div class="form-group"><label>Descrição / Observações</label><textarea id="descInput"></textarea></div>
-                    <div class="form-group"><label>Valor Total (R$)</label><input type="text" inputmode="decimal" id="amountInput" required></div>
+                    <div class="form-group">
+                        <label>Quem pagou?</label>
+                        <select id="payerInput"></select>
+                    </div>
+                    <div class="form-group">
+                        <label>O que foi?</label>
+                        <input type="text" id="titleInput" placeholder="Ex: Mercado" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Descrição / Observações</label>
+                        <textarea id="descInput" placeholder="Itens comprados..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Valor Total (R$)</label>
+                        <input type="text" inputmode="decimal" id="amountInput" placeholder="0,00" required>
+                    </div>
                     <div class="form-group">
                         <label>Como dividir?</label>
                         <select id="splitModeInput" onchange="renderSplitUI()">
-                            <option value="equal">Igual</option><option value="custom">Customizado</option>
+                            <option value="equal">Igual entre todos</option>
+                            <option value="custom">Porcentagem Customizada</option>
                         </select>
                     </div>
                     <div class="split-grid" id="splitUI"></div>
-                    <p id="splitError" style="display: none;">Erro soma</p>
-                    <button type="submit" class="btn-primary" style="margin-top: 16px;">Registrar</button>
+                    <p id="splitError" style="color: var(--danger); font-size: 12px; margin-top: 8px; display: none;">A soma das porcentagens deve ser 100%.</p>
+
+                    <button type="submit" class="btn-primary" style="margin-top: 16px;">Registrar Despesa</button>
                 </form>
             </div>
+
             <div class="card">
-                <h2>Diário Geral</h2>
+                <h2>Diário Geral <button onclick="clearData()" style="background:transparent; border:none; color:var(--danger); font-size:12px; cursor:pointer;">Limpar Tudo</button></h2>
                 <ul class="history-list" id="globalHistoryList"></ul>
             </div>
         </div>
 
         <!-- MEU PERFIL -->
         <div id="view-profile" class="view-section">
+            
             <div class="card">
                 <div class="profile-balance">
                     <h3 id="profileGreeting">Olá</h3>
                     <div id="profileBalanceDisplay" class="balance-amount text-neutral">R$ 0,00</div>
-                    <p id="profileStatusText">Status</p>
-                    <button id="btnPayDebt" class="btn-success" style="display: none;" onclick="openPaymentModal(null)">Pagar</button>
+                    <p id="profileStatusText" style="font-size: 14px; margin-bottom: 16px;">Status do saldo.</p>
+                    <button id="btnPayDebt" class="btn-success" style="display: none;" onclick="openPaymentModal(null)">
+                        Fazer um Pagamento (Abater Saldo)
+                    </button>
                 </div>
             </div>
-            <div class="card"><h2>Pendências</h2><ul class="history-list" id="pendingSpecificList"></ul></div>
-            <div class="card"><h2>Extrato</h2><ul class="history-list" id="personalHistoryList"></ul></div>
+
+            <div class="card">
+                <h2>Pendências Específicas</h2>
+                <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 12px;">Contas que você deve e que ainda não foram pagas.</p>
+                <ul class="history-list" id="pendingSpecificList"></ul>
+            </div>
+
+            <div class="card">
+                <h2>Seu Extrato Completo</h2>
+                <ul class="history-list" id="personalHistoryList"></ul>
+            </div>
         </div>
     </div>
-    
-    <!-- MODAIS (mesmos de antes) -->
-    <div id="paymentModal" class="modal-overlay"> <!-- ... --> </div>
-    <div id="editModal" class="modal-overlay"> <!-- ... --> </div>
 
+    <!-- Modais -->
+    <div id="paymentModal" class="modal-overlay">
+        <div class="modal-content">
+            <h2 style="border:none; color:var(--text-main); font-size:18px; margin-bottom:16px;" id="payModalTitle">Registrar Pagamento</h2>
+            <input type="hidden" id="paySpecificTargetId" value="">
+            <div class="form-group">
+                <label>Para quem você pagou?</label>
+                <select id="paymentReceiver"></select>
+            </div>
+            <div class="form-group">
+                <label>Descrição (Opcional)</label>
+                <input type="text" id="paymentDesc">
+            </div>
+            <div class="form-group">
+                <label>Qual valor? (R$)</label>
+                <input type="text" inputmode="decimal" id="paymentAmount" placeholder="0,00">
+            </div>
+            <div class="flex-row" style="margin-top: 24px; gap: 12px;">
+                <button onclick="closeModal('paymentModal')" style="flex:1; padding: 12px; background: #e5e7eb; border: none; border-radius: 8px; font-weight: bold;">Cancelar</button>
+                <button onclick="submitPayment()" style="flex:1; padding: 12px; background: var(--success); color: white; border: none; border-radius: 8px; font-weight: bold;">Confirmar</button>
+            </div>
+        </div>
+    </div>
 
-    <!-- Status flutuante de conexão -->
+    <div id="editModal" class="modal-overlay">
+        <div class="modal-content">
+            <h2 style="border:none; color:var(--text-main); font-size:18px; margin-bottom:16px;">Editar Despesa</h2>
+            <input type="hidden" id="editTxId">
+            <div class="form-group">
+                <label>O que foi?</label>
+                <input type="text" id="editTitleInput" required>
+            </div>
+            <div class="form-group">
+                <label>Valor Total (R$)</label>
+                <input type="text" inputmode="decimal" id="editAmountInput" required>
+            </div>
+            <div class="form-group">
+                <label>Motivo da Edição</label>
+                <input type="text" id="editReasonInput" required>
+            </div>
+            <div class="flex-row" style="margin-top: 24px; gap: 12px;">
+                <button onclick="closeModal('editModal')" style="flex:1; padding: 12px; background: #e5e7eb; border: none; border-radius: 8px; font-weight: bold;">Cancelar</button>
+                <button onclick="submitEdit()" style="flex:1; padding: 12px; background: var(--primary); color: white; border: none; border-radius: 8px; font-weight: bold;">Salvar</button>
+            </div>
+        </div>
+    </div>
+
     <div id="syncStatus">Conectando...</div>
 
-    <!-- Módulos do Firebase (Versão 10 - Modular) -->
+    <!-- Módulo Central do Firebase e Lógica -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
         import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-database.js";
 
-        // ========================================================
-        //  COLE O SEU CONFIG AQUI DENTRO (Substitua tudo abaixo)
-        // ========================================================
-	// Import the functions you need from the SDKs you need
-	// TODO: Add SDKs for Firebase products that you want to use
-	// https://firebase.google.com/docs/web/setup#available-libraries
+        // ==========================================
+        // 🚨 INSIRA SUAS CREDENCIAIS AQUI!
+        // ==========================================
+        const firebaseConfig = {
+            apiKey: "AIzaSyBwc2iT_FXmOyaco7PKG5R5Xt9yz6UaoKY",
+            authDomain: "contas-ap.firebaseapp.com",
+            databaseURL: "https://contas-ap-default-rtdb.firebaseio.com",
+            projectId: "contas-ap",
+            storageBucket: "contas-ap.firebasestorage.app",
+            messagingSenderId: "363343287065",
+            appId: "1:363343287065:web:406549ebc869cb0baa2b88"
+        };
 
-	// Your web app's Firebase configuration
-	const firebaseConfig = {
-	  apiKey: "AIzaSyBwc2iT_FXmOyaco7PKG5R5Xt9yz6UaoKY",
-	  authDomain: "contas-ap.firebaseapp.com",
-	  databaseURL: "https://contas-ap-default-rtdb.firebaseio.com",
-	  projectId: "contas-ap",
-	  storageBucket: "contas-ap.firebasestorage.app",
-	  messagingSenderId: "363343287065",
-	  appId: "1:363343287065:web:406549ebc869cb0baa2b88"
-	};
-
-	// Initialize Firebase
-	const app = initializeApp(firebaseConfig);
+        const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        // Estado local. O currentUser ainda fica no localStorage pois cada celular loga em um perfil diferente.
         let state = {
             users: [],
             transactions: [],
             currentUser: localStorage.getItem('erpCurrentUser') || 'Victor'
         };
 
-        // UI de Status de Conexão
+        // UI de Sincronização
         const syncBadge = document.getElementById('syncStatus');
-        const connectedRef = ref(db, ".info/connected");
-        onValue(connectedRef, (snap) => {
+        onValue(ref(db, ".info/connected"), (snap) => {
             if (snap.val() === true) {
-                syncBadge.textContent = "Sincronizado";
+                syncBadge.textContent = "Online";
                 syncBadge.classList.add('online');
-                setTimeout(() => syncBadge.style.opacity = '0', 2000); // Esconde se estiver tudo ok
+                setTimeout(() => syncBadge.style.opacity = '0', 2000);
             } else {
                 syncBadge.style.opacity = '1';
-                syncBadge.textContent = "Offline (Tentando reconectar...)";
+                syncBadge.textContent = "Tentando reconectar...";
                 syncBadge.classList.remove('online');
             }
         });
 
-        // ========================================================
-        // LISTENER EM TEMPO REAL: Baixa os dados da nuvem
-        // ========================================================
-        const erpRef = ref(db, 'erp_data');
-        onValue(erpRef, (snapshot) => {
+        // Escutando mudanças do Firebase
+        onValue(ref(db, 'erp_data'), (snapshot) => {
             const data = snapshot.val();
-            
             if (data) {
                 state.users = data.users || [];
-                // O Firebase salva arrays as vezes como objetos com chaves numéricas, garantimos que seja array
                 state.transactions = data.transactions ? Object.values(data.transactions) : [];
             } else {
-                // Primeira vez inicializando o banco vazio
-                state.users = ['Victor', 'Amigo'];
+                // Primeira inicialização se banco estiver zerado
+                state.users = ['Victor'];
                 state.transactions = [];
-                syncToCloud(); // Já manda a estrutura inicial
+                syncToCloud();
             }
 
-            // Se o perfil logado atual foi apagado, joga pro primeiro da lista
             if (!state.users.includes(state.currentUser) && state.users.length > 0) {
                 state.currentUser = state.users[0];
                 localStorage.setItem('erpCurrentUser', state.currentUser);
             }
-
-            // A MÁGICA: Sempre que a nuvem mudar, renderiza tudo de novo instantaneamente
             updateApp();
         });
 
-        // ========================================================
-        // ESCRITA NA NUVEM: Envia a nova versão dos dados para o Firebase
-        // ========================================================
         function syncToCloud() {
             set(ref(db, 'erp_data'), {
                 users: state.users,
@@ -238,101 +295,296 @@
             });
         }
 
-
-        // ========================================================
-        // A PARTIR DAQUI: A LÓGICA DO APP (igual à versão anterior)
-        // A grande diferença é que em vez de "saveState()", chamamos "syncToCloud()"
-        // ========================================================
-        
-        // Expor funções pro escopo global do HTML (pois módulos JS isolam o escopo)
-        window.switchTab = switchTab;
-        window.changeCurrentUser = changeCurrentUser;
-        window.addPerson = addPerson;
-        window.removePerson = removePerson;
-        window.renderSplitUI = renderSplitUI;
-        window.openPaymentModal = openPaymentModal;
-        window.closeModal = closeModal;
-        window.submitPayment = submitPayment;
-        window.openEditModal = openEditModal;
-        window.submitEdit = submitEdit;
-        window.clearData = clearData;
-
+        // ==========================================
+        // LÓGICA DO APLICATIVO
+        // ==========================================
         const parseBRL = (val) => val ? parseFloat(val.toString().replace(/\./g, '').replace(',', '.')) : 0;
         const formatBRL = (val) => val.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 2 });
-        function closeModal(id) { document.getElementById(id).style.display = 'none'; }
         
-        function switchTab(tabId) {
+        // Expondo funções pro HTML conseguir enxergar (já que o <script type="module"> cria um ambiente isolado)
+        window.switchTab = (tabId) => {
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
             document.querySelectorAll('.view-section').forEach(v => v.classList.remove('active'));
             document.getElementById(`tab-${tabId}`).classList.add('active');
             document.getElementById(`view-${tabId}`).classList.add('active');
-        }
+        };
 
-        function changeCurrentUser() {
+        window.changeCurrentUser = () => {
             state.currentUser = document.getElementById('currentUserSelect').value;
             localStorage.setItem('erpCurrentUser', state.currentUser);
             updateApp();
-        }
+        };
 
-        function addPerson() {
+        window.addPerson = () => {
             const name = document.getElementById('newPersonInput').value.trim();
             if (name && !state.users.includes(name)) { 
                 state.users.push(name); 
                 document.getElementById('newPersonInput').value = '';
                 syncToCloud(); 
             }
-        }
+        };
 
-        function removePerson(name) {
+        window.removePerson = (name) => {
             if (state.transactions.some(t => t.payer === name || t.receiver === name || (t.splits && t.splits[name] !== undefined))) {
                 return alert('Remoção bloqueada: usuário possui histórico.');
             }
             state.users = state.users.filter(u => u !== name);
             syncToCloud();
-        }
+        };
 
-        // --- (COPIE TODAS AS FUNÇÕES DE RENDERIZAÇÃO E MATEMÁTICA DO CÓDIGO ANTERIOR AQUI) ---
-        // getPendingBalance, renderNav, renderPeopleList, renderSplitUI, renderGlobalHistory, renderProfileView
-        // ... (Para economizar espaço, elas são idênticas ao código anterior)
+        window.renderSplitUI = () => {
+            const splitMode = document.getElementById('splitModeInput').value;
+            const splitUI = document.getElementById('splitUI');
+            if (state.users.length === 0) return (splitUI.innerHTML = '');
+            if (splitMode === 'equal') {
+                splitUI.innerHTML = state.users.map(u => `<div class="split-item"><label><input type="checkbox" class="split-check" value="${u}" checked> ${u}</label></div>`).join('');
+            } else {
+                splitUI.innerHTML = state.users.map(u => `<div class="split-item"><span>${u}</span><div style="display:flex; align-items:center; gap:4px;"><input type="text" inputmode="decimal" class="pct-input" data-user="${u}" value="${(100/state.users.length).toFixed(1)}"> %</div></div>`).join('');
+            }
+        };
 
-        // Exemplo: O Submit da Nova Despesa
-        document.getElementById('expenseForm').addEventListener('submit', (e) => {
-            e.preventDefault();
-            // ... (Captura os inputs) ...
-            
-            // ... (Calcula os splits) ...
-
-            // Adiciona no state local
-            state.transactions.push({ 
-                id: Date.now(), 
-                type: 'expense', 
-                // ... dados ...
+        function getPendingBalance(userName) {
+            let balance = 0;
+            state.transactions.forEach(t => {
+                if (t.type === 'expense') {
+                    if (t.payer === userName) {
+                        for(let u in t.splits) { if (u !== userName && !t.isSettled?.[u]) balance += t.splits[u]; }
+                    } else if (t.splits[userName] && !t.isSettled?.[userName]) {
+                        balance -= t.splits[userName];
+                    }
+                } else if (t.type === 'payment' && !t.targetExpenseId) {
+                    if (t.payer === userName) balance += t.totalAmount;
+                    if (t.receiver === userName) balance -= t.totalAmount;
+                }
             });
-            
-            // MÁGICA ACONTECE AQUI: Em vez de salvar no localStorage, joga pra nuvem
-            syncToCloud(); 
-            
-            document.getElementById('expenseForm').reset(); 
-            document.getElementById('amountInput').value=''; 
-        });
-
-        // O Submit de edição
-        function submitEdit() {
-            // ... 
-            syncToCloud();
-            closeModal('editModal');
+            return balance;
         }
 
-        // O Submit de pagamento
-        function submitPayment() {
-            // ...
-            syncToCloud();
-            closeModal('paymentModal');
+        function renderNav() {
+            const select = document.getElementById('currentUserSelect');
+            select.innerHTML = state.users.map(u => `<option value="${u}">${u}</option>`).join('');
+            select.value = state.currentUser;
+        }
+
+        function renderPeopleList() {
+            document.getElementById('peopleList').innerHTML = state.users.map(u => `<div class="tag">${u} <button onclick="removePerson('${u}')">×</button></div>`).join('');
+            const payerSelect = document.getElementById('payerInput');
+            payerSelect.innerHTML = state.users.map(u => `<option value="${u}">${u}</option>`).join('');
+            if (state.users.includes(state.currentUser)) payerSelect.value = state.currentUser;
+        }
+
+        function renderGlobalHistory() {
+            const list = document.getElementById('globalHistoryList');
+            if (state.transactions.length === 0) return (list.innerHTML = '<li style="padding:12px;text-align:center;color:#9ca3af;font-size:14px;">Vazio</li>');
+            
+            let html = '';
+            [...state.transactions].reverse().forEach(tx => {
+                if (tx.type === 'expense') {
+                    let splitsHTML = Object.entries(tx.splits).map(([u, val]) => {
+                        let status = tx.isSettled?.[u] ? ' <span class="badge badge-paid">PAGO</span>' : '';
+                        return `<li>${u}: ${formatBRL(val)} (${((val/tx.totalAmount)*100).toFixed(0)}%)${status}</li>`;
+                    }).join('');
+
+                    let auditHTML = '';
+                    if (tx.auditLog && tx.auditLog.length > 0) {
+                        auditHTML = `<div class="audit-log"><b>Histórico de Edições:</b><br>` + 
+                                    tx.auditLog.map(log => `• ${log.date} (${log.editor}): De ${formatBRL(log.oldAmount)} para ${formatBRL(log.newAmount)}. Motivo: ${log.reason}`).join('<br>') + `</div>`;
+                    }
+                    let editBtn = tx.payer === state.currentUser ? `<button class="btn-edit" onclick="openEditModal(${tx.id})">Editar Compra</button>` : '';
+                    let badgeEdited = tx.auditLog?.length > 0 ? `<span class="badge badge-edited">Editado</span>` : '';
+
+                    html += `<li class="history-item">
+                        <div class="hist-header">
+                            <div><div class="hist-title">🛒 ${tx.title} ${badgeEdited}</div><div class="hist-date">${tx.date} • Pago por ${tx.payer}</div></div>
+                            <div class="hist-amount text-negative">${formatBRL(tx.totalAmount)}</div>
+                        </div>
+                        <div class="hist-details">
+                            ${tx.description ? `<p style="margin-bottom:8px;"><i>"${tx.description}"</i></p>` : ''}
+                            Divisão: <ul>${splitsHTML}</ul>
+                            ${auditHTML}
+                            ${editBtn}
+                        </div>
+                    </li>`;
+                } else {
+                    let desc = tx.description ? `<br><i>"${tx.description}"</i>` : '';
+                    html += `<li class="history-item" style="background:#f0fdf4; padding: 12px; border-radius: 8px;">
+                        <div class="hist-header" style="margin:0;">
+                            <div><div class="hist-title">💸 Pagamento</div><div class="hist-date">${tx.date} • ${tx.payer} pagou para ${tx.receiver}${desc}</div></div>
+                            <div class="hist-amount text-positive">${formatBRL(tx.totalAmount)}</div>
+                        </div>
+                    </li>`;
+                }
+            });
+            list.innerHTML = html;
+        }
+
+        function renderProfileView() {
+            const user = state.currentUser;
+            document.getElementById('profileGreeting').textContent = `Perfil: ${user}`;
+            const bal = getPendingBalance(user);
+            const display = document.getElementById('profileBalanceDisplay');
+            const statusTxt = document.getElementById('profileStatusText');
+            const btnPay = document.getElementById('btnPayDebt');
+            
+            if (bal > 0.01) { display.textContent = formatBRL(bal); display.className = 'balance-amount text-positive'; statusTxt.textContent = "A galera te deve."; btnPay.style.display = 'none'; } 
+            else if (bal < -0.01) { display.textContent = formatBRL(Math.abs(bal)); display.className = 'balance-amount text-negative'; statusTxt.textContent = "Seu saldo pendente devedor."; btnPay.style.display = 'block'; } 
+            else { display.textContent = formatBRL(0); display.className = 'balance-amount text-neutral'; statusTxt.textContent = "Tudo quitado."; btnPay.style.display = 'none'; }
+
+            let pendingHTML = ''; let histHTML = '';
+            [...state.transactions].reverse().forEach(tx => {
+                if (tx.type === 'expense' && tx.payer !== user && tx.splits[user] && !tx.isSettled?.[user]) {
+                    pendingHTML += `<li class="history-item">
+                        <div class="hist-header" style="margin:0;">
+                            <div><div class="hist-title">${tx.title}</div><div class="hist-date">Você deve a ${tx.payer}</div></div>
+                            <div style="text-align: right;">
+                                <div class="hist-amount text-negative" style="margin-bottom:4px;">${formatBRL(tx.splits[user])}</div>
+                                <button class="btn-pay-specific" onclick="openPaymentModal(${tx.id})">Pagar Esta</button>
+                            </div>
+                        </div>
+                    </li>`;
+                }
+
+                let impact = 0; let desc = '';
+                if (tx.type === 'expense') {
+                    if (tx.payer === user) { impact = tx.totalAmount - (tx.splits[user]||0); desc = `Você pagou ${tx.title}.`; }
+                    else if (tx.splits[user]) { impact = -tx.splits[user]; desc = `Cota de ${tx.title} por ${tx.payer}.`; }
+                } else if (tx.type === 'payment') {
+                    if (tx.payer === user) { impact = tx.totalAmount; desc = `Você pagou ${tx.receiver}.`; }
+                    else if (tx.receiver === user) { impact = -tx.totalAmount; desc = `${tx.payer} te pagou.`; }
+                }
+
+                if (impact !== 0) {
+                    histHTML += `<li class="history-item">
+                        <div class="hist-header" style="margin:0;">
+                            <div><div class="hist-title" style="font-size:14px;">${tx.type === 'expense' ? tx.title : 'Pagamento'}</div><div class="hist-date">${tx.date}</div></div>
+                            <div class="hist-amount ${impact > 0 ? 'text-positive' : 'text-negative'}">${impact > 0 ? '+' : ''}${formatBRL(impact)}</div>
+                        </div>
+                        <div class="hist-date" style="margin-top:4px;">${desc}</div>
+                    </li>`;
+                }
+            });
+
+            document.getElementById('pendingSpecificList').innerHTML = pendingHTML || '<li style="font-size:12px; color:var(--text-muted); padding: 8px;">Nenhuma conta pendente.</li>';
+            document.getElementById('personalHistoryList').innerHTML = histHTML || '<li style="font-size:12px; color:var(--text-muted); padding: 8px;">Nenhum registro.</li>';
         }
 
         function updateApp() {
-            // Chama as renderizações (renderNav, renderPeopleList...)
+            renderNav();
+            renderPeopleList();
+            window.renderSplitUI();
+            renderGlobalHistory();
+            renderProfileView();
         }
+
+        // ==========================================
+        // SUBMITS E MODAIS
+        // ==========================================
+        document.getElementById('expenseForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const payer = document.getElementById('payerInput').value;
+            const title = document.getElementById('titleInput').value;
+            const desc = document.getElementById('descInput').value;
+            const amount = parseBRL(document.getElementById('amountInput').value);
+            const mode = document.getElementById('splitModeInput').value;
+
+            if (!payer || isNaN(amount) || amount <= 0) return;
+
+            let splits = {};
+            if (mode === 'equal') {
+                const checks = document.querySelectorAll('.split-check:checked');
+                if (checks.length === 0) return alert('Selecione alguém.');
+                checks.forEach(chk => splits[chk.value] = amount / checks.length);
+            } else {
+                let totalPct = 0;
+                document.querySelectorAll('.pct-input').forEach(inp => {
+                    let pct = parseBRL(inp.value) || 0; totalPct += pct; splits[inp.dataset.user] = (amount * pct) / 100;
+                });
+                if (Math.abs(totalPct - 100) > 0.1) return (document.getElementById('splitError').style.display = 'block');
+                document.getElementById('splitError').style.display = 'none';
+            }
+
+            state.transactions.push({ id: Date.now(), type: 'expense', date: new Date().toLocaleDateString('pt-BR'), totalAmount: amount, payer, title, description: desc, splits, isSettled: {}, auditLog: [] });
+            syncToCloud(); 
+            document.getElementById('expenseForm').reset(); document.getElementById('amountInput').value=''; 
+        });
+
+        window.closeModal = (id) => { document.getElementById(id).style.display = 'none'; };
+
+        window.openPaymentModal = (targetExpenseId) => {
+            document.getElementById('paymentDesc').value = '';
+            document.getElementById('paySpecificTargetId').value = targetExpenseId || '';
+            const receiverSelect = document.getElementById('paymentReceiver');
+            const amountInput = document.getElementById('paymentAmount');
+
+            if (targetExpenseId) {
+                const expense = state.transactions.find(t => t.id === targetExpenseId);
+                document.getElementById('payModalTitle').textContent = `Pagar conta: ${expense.title}`;
+                receiverSelect.innerHTML = `<option value="${expense.payer}">${expense.payer}</option>`;
+                amountInput.value = expense.splits[state.currentUser].toFixed(2).replace('.', ',');
+                document.getElementById('paymentDesc').value = `Ref: ${expense.title}`;
+            } else {
+                document.getElementById('payModalTitle').textContent = `Fazer um Pagamento`;
+                receiverSelect.innerHTML = state.users.filter(u => u !== state.currentUser).map(r => `<option value="${r}">${r}</option>`).join('');
+                amountInput.value = Math.abs(getPendingBalance(state.currentUser)).toFixed(2).replace('.', ',');
+            }
+            document.getElementById('paymentModal').style.display = 'flex';
+        };
+
+        window.submitPayment = () => {
+            const receiver = document.getElementById('paymentReceiver').value;
+            const amount = parseBRL(document.getElementById('paymentAmount').value);
+            const desc = document.getElementById('paymentDesc').value;
+            const targetId = document.getElementById('paySpecificTargetId').value;
+
+            if (!receiver || isNaN(amount) || amount <= 0) return;
+
+            if (targetId) {
+                const expense = state.transactions.find(t => t.id == targetId);
+                if(expense) {
+                    if(!expense.isSettled) expense.isSettled = {};
+                    expense.isSettled[state.currentUser] = true;
+                }
+            }
+
+            state.transactions.push({ id: Date.now(), type: 'payment', date: new Date().toLocaleDateString('pt-BR'), totalAmount: amount, payer: state.currentUser, receiver, description: desc, targetExpenseId: targetId });
+            syncToCloud(); window.closeModal('paymentModal');
+        };
+
+        window.openEditModal = (txId) => {
+            const tx = state.transactions.find(t => t.id === txId);
+            document.getElementById('editTxId').value = tx.id;
+            document.getElementById('editTitleInput').value = tx.title;
+            document.getElementById('editAmountInput').value = tx.totalAmount.toFixed(2).replace('.', ',');
+            document.getElementById('editReasonInput').value = '';
+            document.getElementById('editModal').style.display = 'flex';
+        };
+
+        window.submitEdit = () => {
+            const txId = parseInt(document.getElementById('editTxId').value);
+            const tx = state.transactions.find(t => t.id === txId);
+            const newTitle = document.getElementById('editTitleInput').value;
+            const newAmount = parseBRL(document.getElementById('editAmountInput').value);
+            const reason = document.getElementById('editReasonInput').value;
+
+            if (!reason || isNaN(newAmount) || newAmount <= 0) return alert('Preencha um motivo e um valor válido.');
+
+            if(!tx.auditLog) tx.auditLog = [];
+            tx.auditLog.push({ date: new Date().toLocaleDateString('pt-BR'), editor: state.currentUser, oldAmount: tx.totalAmount, newAmount: newAmount, reason: reason });
+
+            for (let user in tx.splits) {
+                let pct = tx.splits[user] / tx.totalAmount;
+                tx.splits[user] = newAmount * pct;
+            }
+            tx.totalAmount = newAmount; tx.title = newTitle;
+
+            syncToCloud(); window.closeModal('editModal');
+        };
+
+        window.clearData = () => {
+            if (confirm('Apagar todo o diário no banco de dados? (Ação irreversível)')) { 
+                state.transactions = []; syncToCloud(); 
+            }
+        };
 
     </script>
 </body>
