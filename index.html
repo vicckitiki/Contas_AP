@@ -31,6 +31,7 @@
         
         button.btn-primary { width: 100%; padding: 14px; background-color: var(--primary); color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; }
         button.btn-success { background-color: var(--success); color: white; border: none; border-radius: 8px; padding: 10px 16px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 8px; }
+        button.btn-warning { background-color: #fbbf24; color: #92400e; border: none; border-radius: 8px; padding: 6px 12px; font-size: 12px; font-weight: bold; cursor: pointer; }
         
         .flex-row { display: flex; gap: 8px; align-items: center; }
         .flex-row input { flex: 1; }
@@ -96,11 +97,13 @@
 
     <div class="container">
         <div class="tabs">
-            <div class="tab active" onclick="switchTab('general')" id="tab-general">Visão Geral</div>
+            <div class="tab active" onclick="switchTab('general')" id="tab-general">Fatura Atual</div>
             <div class="tab" onclick="switchTab('profile')" id="tab-profile">Meu Perfil</div>
         </div>
 
-        <!-- VISÃO GERAL -->
+        <!-- ==============================
+             VISÃO GERAL / FATURA ATUAL
+             ============================== -->
         <div id="view-general" class="view-section active">
             
             <div class="card">
@@ -146,12 +149,24 @@
             </div>
 
             <div class="card">
-                <h2>Diário Geral <button onclick="clearData()" style="background:transparent; border:none; color:var(--danger); font-size:12px; cursor:pointer;">Limpar Tudo</button></h2>
+                <h2>
+                    Lançamentos do Mês
+                    <div>
+                        <button onclick="closeMonth()" class="btn-warning" style="margin-right: 4px;">Fechar Mês</button>
+                    </div>
+                </h2>
                 <ul class="history-list" id="globalHistoryList"></ul>
+            </div>
+
+            <div class="card">
+                <h2>Meses Fechados (Histórico)</h2>
+                <ul class="history-list" id="archiveList"></ul>
             </div>
         </div>
 
-        <!-- MEU PERFIL -->
+        <!-- ==============================
+             MEU PERFIL
+             ============================== -->
         <div id="view-profile" class="view-section">
             
             <div class="card">
@@ -172,7 +187,7 @@
             </div>
 
             <div class="card">
-                <h2>Seu Extrato Completo</h2>
+                <h2>Seu Extrato Completo (Mês Atual)</h2>
                 <ul class="history-list" id="personalHistoryList"></ul>
             </div>
         </div>
@@ -225,6 +240,15 @@
         </div>
     </div>
 
+    <!-- Modal para ver histórico de mês fechado -->
+    <div id="archiveModal" class="modal-overlay">
+        <div class="modal-content" style="max-width: 500px;">
+            <h2 style="border:none; color:var(--text-main); font-size:18px; margin-bottom:16px;" id="archiveModalTitle">Mês</h2>
+            <ul class="history-list" id="archiveModalList"></ul>
+            <button onclick="closeModal('archiveModal')" style="width:100%; padding: 12px; background: #e5e7eb; border: none; border-radius: 8px; font-weight: bold; margin-top: 16px;">Fechar Arquivo</button>
+        </div>
+    </div>
+
     <div id="syncStatus">Conectando...</div>
 
     <!-- Módulo Central do Firebase e Lógica -->
@@ -251,10 +275,10 @@
         let state = {
             users: [],
             transactions: [],
+            archives: [],
             currentUser: localStorage.getItem('erpCurrentUser') || 'Victor'
         };
 
-        // UI de Sincronização
         const syncBadge = document.getElementById('syncStatus');
         onValue(ref(db, ".info/connected"), (snap) => {
             if (snap.val() === true) {
@@ -268,16 +292,16 @@
             }
         });
 
-        // Escutando mudanças do Firebase
         onValue(ref(db, 'erp_data'), (snapshot) => {
             const data = snapshot.val();
             if (data) {
                 state.users = data.users || [];
                 state.transactions = data.transactions ? Object.values(data.transactions) : [];
+                state.archives = data.archives ? Object.values(data.archives) : [];
             } else {
-                // Primeira inicialização se banco estiver zerado
                 state.users = ['Victor'];
                 state.transactions = [];
+                state.archives = [];
                 syncToCloud();
             }
 
@@ -291,7 +315,8 @@
         function syncToCloud() {
             set(ref(db, 'erp_data'), {
                 users: state.users,
-                transactions: state.transactions
+                transactions: state.transactions,
+                archives: state.archives
             });
         }
 
@@ -301,7 +326,6 @@
         const parseBRL = (val) => val ? parseFloat(val.toString().replace(/\./g, '').replace(',', '.')) : 0;
         const formatBRL = (val) => val.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 2 });
         
-        // Expondo funções pro HTML conseguir enxergar (já que o <script type="module"> cria um ambiente isolado)
         window.switchTab = (tabId) => {
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
             document.querySelectorAll('.view-section').forEach(v => v.classList.remove('active'));
@@ -326,7 +350,7 @@
 
         window.removePerson = (name) => {
             if (state.transactions.some(t => t.payer === name || t.receiver === name || (t.splits && t.splits[name] !== undefined))) {
-                return alert('Remoção bloqueada: usuário possui histórico.');
+                return alert('Remoção bloqueada: usuário possui histórico ativo.');
             }
             state.users = state.users.filter(u => u !== name);
             syncToCloud();
@@ -360,6 +384,91 @@
             return balance;
         }
 
+        // ==========================================
+        // LÓGICA DE FECHAMENTO DE MÊS
+        // ==========================================
+        window.closeMonth = () => {
+            if (state.transactions.length === 0) return alert("Não há transações no mês atual para fechar.");
+            
+            const monthName = prompt("Digite um nome para a fatura que está fechando (Ex: Setembro 2026):");
+            if (!monthName) return;
+
+            // 1. Calcula o saldo líquido de quem deve quem neste exato momento
+            let balances = {};
+            state.users.forEach(u => balances[u] = getPendingBalance(u));
+
+            // 2. Salva as transações atuais no arquivo morto
+            if (!state.archives) state.archives = [];
+            state.archives.push({
+                id: Date.now(),
+                title: monthName,
+                date: new Date().toLocaleDateString('pt-BR'),
+                transactions: [...state.transactions]
+            });
+
+            // 3. Limpa as transações atuais
+            state.transactions = [];
+
+            // 4. Transporta as dívidas: Cruza credores e devedores para gerar o "Saldo Anterior"
+            let debtors = [];
+            let creditors = [];
+            for (let u in balances) {
+                if (balances[u] < -0.01) debtors.push({ user: u, amount: Math.abs(balances[u]) });
+                if (balances[u] > 0.01) creditors.push({ user: u, amount: balances[u] });
+            }
+
+            let i = 0, j = 0;
+            while (i < debtors.length && j < creditors.length) {
+                let debt = debtors[i];
+                let cred = creditors[j];
+                let settleAmount = Math.min(debt.amount, cred.amount);
+
+                // Cria uma "Despesa" onde o credor "pagou" pela dívida do devedor
+                state.transactions.push({
+                    id: Date.now() + Math.random(), // id único
+                    type: 'expense',
+                    date: new Date().toLocaleDateString('pt-BR'),
+                    totalAmount: settleAmount,
+                    payer: cred.user,
+                    title: `Saldo Anterior (${monthName})`,
+                    description: `Saldo devedor transferido do mês de ${monthName}.`,
+                    splits: { [debt.user]: settleAmount },
+                    isSettled: {},
+                    auditLog: []
+                });
+
+                debt.amount -= settleAmount;
+                cred.amount -= settleAmount;
+                if (debt.amount < 0.01) i++;
+                if (cred.amount < 0.01) j++;
+            }
+
+            syncToCloud();
+            alert(`Mês "${monthName}" fechado com sucesso! As transações foram arquivadas e os saldos pendentes transportados para o novo mês.`);
+        };
+
+        window.viewArchive = (archiveId) => {
+            const arc = state.archives.find(a => a.id === archiveId);
+            if (!arc) return;
+            document.getElementById('archiveModalTitle').textContent = `Fatura: ${arc.title}`;
+            
+            const list = document.getElementById('archiveModalList');
+            let html = '';
+            [...arc.transactions].reverse().forEach(tx => {
+                if (tx.type === 'expense') {
+                    let splitsHTML = Object.entries(tx.splits).map(([u, val]) => `<li>${u}: ${formatBRL(val)}</li>`).join('');
+                    html += `<li class="history-item"><div class="hist-header"><div><div class="hist-title">🛒 ${tx.title}</div><div class="hist-date">${tx.date} • Pago por ${tx.payer}</div></div><div class="hist-amount text-negative">${formatBRL(tx.totalAmount)}</div></div><div class="hist-details">Divisão: <ul>${splitsHTML}</ul></div></li>`;
+                } else {
+                    html += `<li class="history-item" style="background:#f0fdf4; padding: 12px; border-radius: 8px;"><div class="hist-header" style="margin:0;"><div><div class="hist-title">💸 Pagamento</div><div class="hist-date">${tx.date} • ${tx.payer} pagou para ${tx.receiver}</div></div><div class="hist-amount text-positive">${formatBRL(tx.totalAmount)}</div></div></li>`;
+                }
+            });
+            list.innerHTML = html;
+            document.getElementById('archiveModal').style.display = 'flex';
+        };
+
+        // ==========================================
+        // RENDERIZAÇÕES DE TELA
+        // ==========================================
         function renderNav() {
             const select = document.getElementById('currentUserSelect');
             select.innerHTML = state.users.map(u => `<option value="${u}">${u}</option>`).join('');
@@ -375,7 +484,7 @@
 
         function renderGlobalHistory() {
             const list = document.getElementById('globalHistoryList');
-            if (state.transactions.length === 0) return (list.innerHTML = '<li style="padding:12px;text-align:center;color:#9ca3af;font-size:14px;">Vazio</li>');
+            if (state.transactions.length === 0) return (list.innerHTML = '<li style="padding:12px;text-align:center;color:#9ca3af;font-size:14px;">Sem lançamentos no mês atual.</li>');
             
             let html = '';
             [...state.transactions].reverse().forEach(tx => {
@@ -387,7 +496,7 @@
 
                     let auditHTML = '';
                     if (tx.auditLog && tx.auditLog.length > 0) {
-                        auditHTML = `<div class="audit-log"><b>Histórico de Edições:</b><br>` + 
+                        auditHTML = `<div class="audit-log"><b>Edições:</b><br>` + 
                                     tx.auditLog.map(log => `• ${log.date} (${log.editor}): De ${formatBRL(log.oldAmount)} para ${formatBRL(log.newAmount)}. Motivo: ${log.reason}`).join('<br>') + `</div>`;
                     }
                     let editBtn = tx.payer === state.currentUser ? `<button class="btn-edit" onclick="openEditModal(${tx.id})">Editar Compra</button>` : '';
@@ -414,6 +523,28 @@
                         </div>
                     </li>`;
                 }
+            });
+            list.innerHTML = html;
+        }
+
+        function renderArchives() {
+            const list = document.getElementById('archiveList');
+            if (!state.archives || state.archives.length === 0) {
+                list.innerHTML = '<li style="padding:12px;text-align:center;color:#9ca3af;font-size:14px;">Nenhum mês fechado.</li>';
+                return;
+            }
+            let html = '';
+            [...state.archives].reverse().forEach(arc => {
+                html += `
+                <li class="history-item">
+                    <div class="hist-header" style="margin:0; align-items: center;">
+                        <div>
+                            <div class="hist-title">📁 ${arc.title}</div>
+                            <div class="hist-date">Fechado em: ${arc.date} • ${arc.transactions.length} registros</div>
+                        </div>
+                        <button class="btn-primary" style="width: auto; padding: 6px 12px; font-size: 12px;" onclick="viewArchive(${arc.id})">Ver Fatura</button>
+                    </div>
+                </li>`;
             });
             list.innerHTML = html;
         }
@@ -473,11 +604,12 @@
             renderPeopleList();
             window.renderSplitUI();
             renderGlobalHistory();
+            renderArchives();
             renderProfileView();
         }
 
         // ==========================================
-        // SUBMITS E MODAIS
+        // SUBMITS E MODAIS GERAIS
         // ==========================================
         document.getElementById('expenseForm').addEventListener('submit', (e) => {
             e.preventDefault();
