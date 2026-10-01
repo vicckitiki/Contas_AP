@@ -77,6 +77,9 @@
         .btn-edit { background: transparent; border: none; color: var(--primary); font-size: 13px; font-weight: bold; cursor: pointer; text-decoration: underline; margin-top: 8px; }
         .btn-pay-specific { background: var(--success); color: white; border: none; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; cursor: pointer; margin-left: 8px;}
 
+        /* Modal Arquivo Morto */
+        #archiveModal .modal-content { max-width: 500px; }
+
         #syncStatus {
             position: fixed; bottom: 16px; right: 16px; padding: 8px 12px; border-radius: 20px;
             font-size: 12px; font-weight: bold; background: #fbbf24; color: #92400e;
@@ -242,7 +245,7 @@
 
     <!-- Modal para ver histórico de mês fechado -->
     <div id="archiveModal" class="modal-overlay">
-        <div class="modal-content" style="max-width: 500px;">
+        <div class="modal-content">
             <h2 style="border:none; color:var(--text-main); font-size:18px; margin-bottom:16px;" id="archiveModalTitle">Mês</h2>
             <ul class="history-list" id="archiveModalList"></ul>
             <button onclick="closeModal('archiveModal')" style="width:100%; padding: 12px; background: #e5e7eb; border: none; border-radius: 8px; font-weight: bold; margin-top: 16px;">Fechar Arquivo</button>
@@ -385,31 +388,19 @@
         }
 
         // ==========================================
-        // LÓGICA DE FECHAMENTO DE MÊS
+        // LÓGICA DE FECHAMENTO DE MÊS (ATUALIZADA)
         // ==========================================
         window.closeMonth = () => {
             if (state.transactions.length === 0) return alert("Não há transações no mês atual para fechar.");
             
-            const monthName = prompt("Digite um nome para a fatura que está fechando (Ex: Setembro 2026):");
+            const monthName = prompt("Digite um nome para a fatura que está fechando (Ex: Outubro 2026):");
             if (!monthName) return;
 
             // 1. Calcula o saldo líquido de quem deve quem neste exato momento
             let balances = {};
             state.users.forEach(u => balances[u] = getPendingBalance(u));
 
-            // 2. Salva as transações atuais no arquivo morto
-            if (!state.archives) state.archives = [];
-            state.archives.push({
-                id: Date.now(),
-                title: monthName,
-                date: new Date().toLocaleDateString('pt-BR'),
-                transactions: [...state.transactions]
-            });
-
-            // 3. Limpa as transações atuais
-            state.transactions = [];
-
-            // 4. Transporta as dívidas: Cruza credores e devedores para gerar o "Saldo Anterior"
+            // 2. Cruza credores e devedores para gerar "Recibos de Pagamento" automáticos
             let debtors = [];
             let creditors = [];
             for (let u in balances) {
@@ -423,18 +414,15 @@
                 let cred = creditors[j];
                 let settleAmount = Math.min(debt.amount, cred.amount);
 
-                // Cria uma "Despesa" onde o credor "pagou" pela dívida do devedor
+                // Cria um registro de PAGAMENTO na fatura antiga para liquidá-la 
                 state.transactions.push({
-                    id: Date.now() + Math.random(), // id único
-                    type: 'expense',
+                    id: Date.now() + Math.random(),
+                    type: 'payment',
                     date: new Date().toLocaleDateString('pt-BR'),
                     totalAmount: settleAmount,
-                    payer: cred.user,
-                    title: `Saldo Anterior (${monthName})`,
-                    description: `Saldo devedor transferido do mês de ${monthName}.`,
-                    splits: { [debt.user]: settleAmount },
-                    isSettled: {},
-                    auditLog: []
+                    payer: debt.user,     // Quem devia fez o pagamento
+                    receiver: cred.user,  // Quem tinha crédito recebeu
+                    description: `Liquidação de fechamento da fatura: ${monthName}.`
                 });
 
                 debt.amount -= settleAmount;
@@ -443,8 +431,20 @@
                 if (cred.amount < 0.01) j++;
             }
 
+            // 3. Salva as transações atuais (agora com os pagamentos de quitação embutidos) no arquivo morto
+            if (!state.archives) state.archives = [];
+            state.archives.push({
+                id: Date.now(),
+                title: monthName,
+                date: new Date().toLocaleDateString('pt-BR'),
+                transactions: [...state.transactions]
+            });
+
+            // 4. Limpa as transações atuais (O novo mês começa zerado!)
+            state.transactions = [];
+
             syncToCloud();
-            alert(`Mês "${monthName}" fechado com sucesso! As transações foram arquivadas e os saldos pendentes transportados para o novo mês.`);
+            alert(`Fatura "${monthName}" fechada e liquidada! O histórico foi arquivado e o novo mês começará zerado.`);
         };
 
         window.viewArchive = (archiveId) => {
@@ -459,7 +459,8 @@
                     let splitsHTML = Object.entries(tx.splits).map(([u, val]) => `<li>${u}: ${formatBRL(val)}</li>`).join('');
                     html += `<li class="history-item"><div class="hist-header"><div><div class="hist-title">🛒 ${tx.title}</div><div class="hist-date">${tx.date} • Pago por ${tx.payer}</div></div><div class="hist-amount text-negative">${formatBRL(tx.totalAmount)}</div></div><div class="hist-details">Divisão: <ul>${splitsHTML}</ul></div></li>`;
                 } else {
-                    html += `<li class="history-item" style="background:#f0fdf4; padding: 12px; border-radius: 8px;"><div class="hist-header" style="margin:0;"><div><div class="hist-title">💸 Pagamento</div><div class="hist-date">${tx.date} • ${tx.payer} pagou para ${tx.receiver}</div></div><div class="hist-amount text-positive">${formatBRL(tx.totalAmount)}</div></div></li>`;
+                    let desc = tx.description ? `<br><i>"${tx.description}"</i>` : '';
+                    html += `<li class="history-item" style="background:#f0fdf4; padding: 12px; border-radius: 8px;"><div class="hist-header" style="margin:0;"><div><div class="hist-title">💸 Pagamento</div><div class="hist-date">${tx.date} • ${tx.payer} pagou para ${tx.receiver}${desc}</div></div><div class="hist-amount text-positive">${formatBRL(tx.totalAmount)}</div></div></li>`;
                 }
             });
             list.innerHTML = html;
